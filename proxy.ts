@@ -20,42 +20,10 @@ export default auth((req) => {
     return Response.redirect(new URL("/login", req.url));
   }
 
-  // Usuário autenticado tentando acessar /login
-  if (session && pathname === "/login") {
-    const isAdmin = user?.role === "SUPER" || user?.role === "ADMIN";
-    const onboarded = user?.onboarded;
-
-    if (!onboarded && !isAdmin) {
-      return Response.redirect(new URL("/onboarding", req.url));
-    }
+  // Usuário autenticado tentando acessar /login ou rotas auth
+  if (session && isPublic && pathname !== "/api/auth/signout") {
+    // Redireciona sempre todos diretamente para o dashboard
     return Response.redirect(new URL("/dashboard", req.url));
-  }
-
-  // Usuário autenticado em /onboarding
-  if (session && isOnboarding) {
-    const isAdmin = user?.role === "SUPER" || user?.role === "ADMIN";
-    const onboarded = user?.onboarded;
-
-    // ADMIN/SUPER pulam onboarding → vão direto para o dashboard
-    if (isAdmin) {
-      return Response.redirect(new URL("/dashboard", req.url));
-    }
-    // Já completou o onboarding → dashboard
-    if (onboarded) {
-      return Response.redirect(new URL("/dashboard", req.url));
-    }
-    return;
-  }
-
-  // Usuário autenticado em rotas do app (ex: /dashboard, /tasks, etc.)
-  if (session && !isPublic && !isOnboarding) {
-    const isAdmin = user?.role === "SUPER" || user?.role === "ADMIN";
-    const onboarded = user?.onboarded;
-
-    // Funcionário sem onboarding concluído → força onboarding
-    if (!onboarded && !isAdmin) {
-      return Response.redirect(new URL("/onboarding", req.url));
-    }
   }
 });
 
