@@ -27,7 +27,8 @@ export async function POST(req: Request) {
       departmentSlug: user.department?.slug || "",
       departmentName: user.department?.name || "",
     });
-  } catch (error) {
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  } catch (error: any) {
+    console.error("[lookup] erro:", error?.message);
+    return NextResponse.json({ error: "Server error", detail: error?.message }, { status: 500 });
   }
 }
