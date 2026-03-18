@@ -1,60 +1,66 @@
-import { auth } from "@/lib/auth";
-import { NextResponse } from "next/server";
-import { ROUTE_MIN_ROLE, canAccess } from "@/lib/rbac";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
+
+const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
+  const session = req.auth;
+  const user = session?.user as any;
 
-  // Rotas públicas: login, todas as APIs, e assets
-  const publicPaths = ["/login", "/api/"];
-  const isPublic = publicPaths.some((p) => pathname.startsWith(p));
+  const isPublic = pathname === "/login" || pathname.startsWith("/api/auth");
+  const isOnboarding = pathname.startsWith("/onboarding");
+  const isApi = pathname.startsWith("/api");
 
-  if (isPublic) return NextResponse.next();
+  // Deixa APIs passarem (proteções específicas ficam dentro das próprias APIs)
+  if (isApi) return;
 
-  // Se não autenticado, redirecionar para login
-  if (!req.auth) {
-    const loginUrl = new URL("/login", req.nextUrl.origin);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+  // Usuário não autenticado → redireciona para /login
+  if (!session && !isPublic) {
+    return Response.redirect(new URL("/login", req.url));
   }
 
-  const user = req.auth.user as any;
-  const role = user?.role as string | undefined;
-  const onboarded = user?.onboarded as boolean | undefined;
+  // Usuário autenticado tentando acessar /login
+  if (session && pathname === "/login") {
+    const isAdmin = user?.role === "SUPER" || user?.role === "ADMIN";
+    const onboarded = user?.onboarded;
 
-  // Onboarding: redirecionar novos usuários
-  if (!onboarded && pathname !== "/onboarding") {
-    return NextResponse.redirect(new URL("/onboarding", req.nextUrl.origin));
-  }
-  if (onboarded && pathname === "/onboarding") {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin));
-  }
-
-  // RBAC: verificar role mínima por rota
-  const matchedRoute = Object.keys(ROUTE_MIN_ROLE).find(
-    (r) => pathname === r || pathname.startsWith(r + "/")
-  );
-  if (matchedRoute && !canAccess(role, ROUTE_MIN_ROLE[matchedRoute])) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin));
+    if (!onboarded && !isAdmin) {
+      return Response.redirect(new URL("/onboarding", req.url));
+    }
+    return Response.redirect(new URL("/dashboard", req.url));
   }
 
-  // Proteção por departamento: rotas /departments/{slug} só acessíveis
-  // ao membro do departamento, SUPER ou ADMIN
-  const deptRouteMatch = pathname.match(/^\/departments\/([^/]+)/);
-  if (deptRouteMatch) {
-    const routeSlug = deptRouteMatch[1];
-    const userDeptSlug = (user as any)?.departmentSlug as string | undefined;
-    const isGlobal = role === "SUPER" || role === "ADMIN";
-    if (!isGlobal && userDeptSlug !== routeSlug) {
-      // Redireciona para o próprio departamento ou para a lista geral
-      const fallback = userDeptSlug ? `/departments/${userDeptSlug}` : "/departments";
-      return NextResponse.redirect(new URL(fallback, req.nextUrl.origin));
+  // Usuário autenticado em /onboarding
+  if (session && isOnboarding) {
+    const isAdmin = user?.role === "SUPER" || user?.role === "ADMIN";
+    const onboarded = user?.onboarded;
+
+    // ADMIN/SUPER pulam onboarding → vão direto para o dashboard
+    if (isAdmin) {
+      return Response.redirect(new URL("/dashboard", req.url));
+    }
+    // Já completou o onboarding → dashboard
+    if (onboarded) {
+      return Response.redirect(new URL("/dashboard", req.url));
+    }
+    return;
+  }
+
+  // Usuário autenticado em rotas do app (ex: /dashboard, /tasks, etc.)
+  if (session && !isPublic && !isOnboarding) {
+    const isAdmin = user?.role === "SUPER" || user?.role === "ADMIN";
+    const onboarded = user?.onboarded;
+
+    // Funcionário sem onboarding concluído → força onboarding
+    if (!onboarded && !isAdmin) {
+      return Response.redirect(new URL("/onboarding", req.url));
     }
   }
-
-  return NextResponse.next();
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|logo.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
