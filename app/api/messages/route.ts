@@ -100,7 +100,7 @@ export async function POST(req: Request) {
           select: { id: true, name: true },
         });
         const toNotify = allUsers.filter((u) =>
-          mentionTokens.some((t) => u.name.toLowerCase().startsWith(t.toLowerCase()))
+          mentionTokens.some((t: string) => u.name.toLowerCase().startsWith(t.toLowerCase()))
         );
         for (const u of toNotify) {
           await prisma.notification.create({
