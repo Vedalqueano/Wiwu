@@ -1,34 +1,41 @@
-import NextAuth from "next-auth";
-import { authConfig } from "@/lib/auth.config";
+import { NextRequest, NextResponse } from "next/server";
 
-const { auth } = NextAuth(authConfig);
+// Next.js 16: proxy.ts roda em Node.js runtime (não Edge).
+// O wrapper auth() do NextAuth era para Edge Runtime — não funciona aqui.
+// Usamos verificação otimista do cookie, conforme recomendado pelo Next.js 16.
+// A segurança real fica nas API routes e server components.
 
-export default auth((req) => {
+const SESSION_COOKIES = [
+  "__Secure-authjs.session-token", // produção (HTTPS)
+  "authjs.session-token",          // desenvolvimento (HTTP)
+];
+
+export default function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const session = req.auth;
-  const user = session?.user as any;
 
-  const isPublic = pathname === "/login" || pathname.startsWith("/api/auth");
-  const isOnboarding = pathname.startsWith("/onboarding");
   const isApi = pathname.startsWith("/api");
+  const isPublic = pathname === "/login" || pathname.startsWith("/api/auth");
 
-  // Deixa APIs passarem (proteções específicas ficam dentro das próprias APIs)
-  if (isApi) return;
+  // APIs têm proteção própria nas route handlers
+  if (isApi) return NextResponse.next();
 
-  // Usuário não autenticado → redireciona para /login
-  if (!session && !isPublic) {
-    return Response.redirect(new URL("/login", req.url));
+  const hasSession = SESSION_COOKIES.some((name) => req.cookies.has(name));
+
+  // Não autenticado → /login
+  if (!hasSession && !isPublic) {
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  // Usuário autenticado tentando acessar /login ou rotas auth
-  if (session && isPublic && pathname !== "/api/auth/signout") {
-    // Redireciona sempre todos diretamente para o dashboard
-    return Response.redirect(new URL("/dashboard", req.url));
+  // Autenticado tentando acessar /login → /dashboard
+  if (hasSession && isPublic && pathname !== "/api/auth/signout") {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
-});
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|logo.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|logo\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
