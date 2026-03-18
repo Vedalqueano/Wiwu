@@ -8,14 +8,6 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-    const superExists = await prisma.user.findFirst({ where: { role: "SUPER" } });
-    if (superExists) {
-      return NextResponse.json(
-        { error: "Setup já foi realizado. Um usuário SUPER já existe." },
-        { status: 403 }
-      );
-    }
-
     const { name, email, password } = await req.json();
     if (!name || !email || !password) {
       return NextResponse.json({ error: "name, email e password são obrigatórios." }, { status: 400 });
@@ -50,19 +42,35 @@ export async function POST(req: Request) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email: email.toLowerCase(),
-        initials,
-        passwordHash,
-        role: "SUPER",
-        color: "#050A2D",
-        onboarded: true,
-        companyId: company.id,
-        departmentId: dept.id,
-      },
-    });
+    const superExists = await prisma.user.findFirst({ where: { role: "SUPER" } });
+    let user;
+    if (superExists) {
+      user = await prisma.user.update({
+        where: { id: superExists.id },
+        data: {
+          name,
+          email: email.toLowerCase(),
+          initials,
+          passwordHash,
+          companyId: company.id,
+          departmentId: dept.id,
+        }
+      });
+    } else {
+      user = await prisma.user.create({
+        data: {
+          name,
+          email: email.toLowerCase(),
+          initials,
+          passwordHash,
+          role: "SUPER",
+          color: "#050A2D",
+          onboarded: true,
+          companyId: company.id,
+          departmentId: dept.id,
+        },
+      });
+    }
 
     return NextResponse.json({
       ok: true,
