@@ -2,14 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { Bell, Search } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { SearchModal } from "./search-modal";
+import { getSocket } from "@/lib/socket-client";
 
 interface TopBarProps {
   title: string;
 }
 
 export function TopBar({ title }: TopBarProps) {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const now = new Date();
   const dateStr = now.toLocaleDateString("pt-BR", {
@@ -29,6 +35,39 @@ export function TopBar({ title }: TopBarProps) {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+
+  // Buscar contagem inicial de notificações não lidas
+  useEffect(() => {
+    fetch("/api/notifications")
+      .then((r) => r.json())
+      .then((notifs: Array<{ read: boolean }>) => {
+        if (Array.isArray(notifs)) {
+          setUnreadCount(notifs.filter((n) => !n.read).length);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Entrar na sala pessoal e ouvir novas notificações via Socket.IO
+  useEffect(() => {
+    const userId = (session?.user as any)?.id;
+    if (!userId) return;
+
+    const socket = getSocket();
+
+    const joinRoom = () => socket.emit("join-user-room", userId);
+    joinRoom();
+    socket.on("connect", joinRoom);
+
+    socket.on("new-notification", () => {
+      setUnreadCount((prev) => prev + 1);
+    });
+
+    return () => {
+      socket.off("connect", joinRoom);
+      socket.off("new-notification");
+    };
+  }, [(session?.user as any)?.id]);
 
   return (
     <>
@@ -54,9 +93,21 @@ export function TopBar({ title }: TopBarProps) {
           </div>
 
           {/* Notification bell */}
-          <button className="relative w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center border border-[var(--color-border)] bg-white text-[var(--color-t2)] hover:bg-[var(--color-page)] transition-colors cursor-pointer">
+          <button
+            onClick={() => {
+              setUnreadCount(0);
+              router.push("/notifications");
+            }}
+            className="relative w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center border border-[var(--color-border)] bg-white text-[var(--color-t2)] hover:bg-[var(--color-page)] transition-colors cursor-pointer"
+          >
             <Bell className="w-3.5 h-3.5" />
-            <div className="absolute top-[5px] right-[5px] w-1.5 h-1.5 bg-[var(--color-red)] rounded-full border-[1.5px] border-white" />
+            {unreadCount > 0 && (
+              <div className="absolute -top-1 -right-1 min-w-[16px] h-[16px] bg-[var(--color-red)] rounded-full border-[1.5px] border-white flex items-center justify-center">
+                <span className="text-[9px] font-bold text-white px-0.5">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              </div>
+            )}
           </button>
         </div>
       </header>

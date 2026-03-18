@@ -30,6 +30,11 @@ app.prepare().then(() => {
     socket.on("stop-typing", ({ channelId }: { channelId: string }) => {
       socket.to(channelId).emit("user-stop-typing");
     });
+
+    // Sala pessoal do usuário (para notificações direcionadas)
+    socket.on("join-user-room", (userId: string) => {
+      if (userId) socket.join(`user-${userId}`);
+    });
   });
 
   const port = process.env.PORT || 3000;

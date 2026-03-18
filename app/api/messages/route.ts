@@ -67,6 +67,56 @@ export async function POST(req: Request) {
       io.to(channelId).emit("new-message", payload);
     }
 
+    // ── Notificações ─────────────────────────────────────────────────────
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      include: { members: { select: { userId: true } } },
+    });
+
+    if (channel) {
+      const preview = content.length > 120 ? content.slice(0, 120) + "…" : content;
+
+      // DM: notificar o outro participante
+      if (channel.type === "DIRECT") {
+        const otherId = channel.members.find((m) => m.userId !== userId)?.userId;
+        if (otherId) {
+          await prisma.notification.create({
+            data: {
+              type: "DIRECT_MESSAGE",
+              title: `Mensagem de ${message.user.name}`,
+              body: preview,
+              userId: otherId,
+            },
+          });
+          if (io) io.to(`user-${otherId}`).emit("new-notification");
+        }
+      }
+
+      // @menções: notificar usuários mencionados
+      const mentionTokens = (content.match(/@(\S+)/g) ?? []).map((t: string) => t.slice(1));
+      if (mentionTokens.length > 0) {
+        const allUsers = await prisma.user.findMany({
+          where: { companyId: channel.companyId, id: { not: userId } },
+          select: { id: true, name: true },
+        });
+        const toNotify = allUsers.filter((u) =>
+          mentionTokens.some((t) => u.name.toLowerCase().startsWith(t.toLowerCase()))
+        );
+        for (const u of toNotify) {
+          await prisma.notification.create({
+            data: {
+              type: "MENTION",
+              title: `${message.user.name} mencionou você em ${channel.name}`,
+              body: preview,
+              userId: u.id,
+            },
+          });
+          if (io) io.to(`user-${u.id}`).emit("new-notification");
+        }
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     return NextResponse.json(payload);
   } catch (error) {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
