@@ -4,26 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
-/* ── Departamentos (carregados localmente por simplicidade) ── */
-const DEPARTMENTS = [
-  { id: "logistica", name: "Logística", color: "#E6141E", icon: "📦" },
-  { id: "vendas", name: "Vendas / Loja", color: "#7DAA4A", icon: "🏪" },
-  { id: "sac", name: "SAC", color: "#1A3A8F", icon: "🎧" },
-  { id: "marketing", name: "Marketing", color: "#B84870", icon: "📢" },
-  { id: "financeiro", name: "Financeiro", color: "#C9881A", icon: "💰" },
-  { id: "ti", name: "TI", color: "#6B3FA0", icon: "💻" },
-];
-
-const DEPT_MSGS: Record<string, string> = {
-  logistica: "Seu painel de Logística está pronto.",
-  vendas: "Boas vendas para hoje!",
-  sac: "Seus atendimentos estão esperando.",
-  marketing: "Novas campanhas aguardam.",
-  financeiro: "Relatórios prontos para análise.",
-  ti: "Sistemas em dia.",
-};
-
-type Step = "identify" | "department" | "password" | "welcome";
+type Step = "identify" | "password" | "welcome";
 
 type UserInfo = {
   name: string;
@@ -37,7 +18,6 @@ type UserInfo = {
 export default function LoginPage() {
   const [step, setStep] = useState<Step>("identify");
   const [identifier, setIdentifier] = useState("");
-  const [selectedDept, setSelectedDept] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -60,8 +40,7 @@ export default function LoginPage() {
       if (res.ok) {
         const data = await res.json();
         setUser(data);
-        setSelectedDept(data.departmentSlug || "");
-        setStep("department");
+        setStep("password");
       } else {
         setError("Usuário não encontrado.");
       }
@@ -98,8 +77,8 @@ export default function LoginPage() {
     <div className="w-full max-w-[400px] px-6 animate-fade-in">
       {/* Logo */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 mb-4">
-          <span className="text-2xl font-bold text-white">W</span>
+        <div className="inline-flex items-center justify-center w-[72px] h-[72px] mb-4 relative drop-shadow-xl">
+          <img src="/logo.png" alt="WiWU logo" className="w-full h-full object-contain rounded-full" />
         </div>
         <h1 className="text-xl font-bold text-white tracking-tight">WiWU Flow</h1>
         <p className="text-sm text-white/40 mt-1">Plataforma de gestão interna</p>
@@ -131,52 +110,6 @@ export default function LoginPage() {
               className="w-full mt-5 py-2.5 bg-[var(--color-navy)] text-white text-[13px] font-bold rounded-[var(--radius-sm)] hover:bg-[var(--color-navy-2)] transition-colors cursor-pointer disabled:opacity-50"
             >
               {loading ? "Verificando..." : "Continuar"}
-            </button>
-          </div>
-        )}
-
-        {/* ── Step 2: Department ── */}
-        {step === "department" && (
-          <div className="animate-fade-in">
-            <h2 className="text-[15px] font-bold text-[var(--color-t1)] mb-1">
-              Olá, {user?.name}! 👋
-            </h2>
-            <p className="text-xs text-[var(--color-t3)] mb-5">Selecione seu departamento</p>
-            <div className="flex flex-col gap-2 mb-5">
-              {DEPARTMENTS.map((d) => (
-                <button
-                  key={d.id}
-                  onClick={() => setSelectedDept(d.id)}
-                  className={cn(
-                    "flex items-center gap-3 p-3 rounded-[var(--radius-sm)] border transition-all cursor-pointer text-left",
-                    selectedDept === d.id
-                      ? "border-[var(--color-navy)] bg-[var(--color-navy-light)] shadow-[0_0_0_3px_#050A2D08]"
-                      : "border-[var(--color-border)] hover:bg-[var(--color-page)]"
-                  )}
-                >
-                  <span className="text-lg">{d.icon}</span>
-                  <span className={cn("text-[13px] font-semibold", selectedDept === d.id ? "text-[var(--color-navy)]" : "text-[var(--color-t2)]")}>
-                    {d.name}
-                  </span>
-                  {selectedDept === d.id && (
-                    <svg className="ml-auto w-4 h-4 text-[var(--color-navy)]" viewBox="0 0 16 16" fill="none">
-                      <path d="M3 8l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => { if (selectedDept) { setError(""); setStep("password"); } }}
-              className="w-full py-2.5 bg-[var(--color-navy)] text-white text-[13px] font-bold rounded-[var(--radius-sm)] hover:bg-[var(--color-navy-2)] transition-colors cursor-pointer"
-            >
-              Continuar
-            </button>
-            <button
-              onClick={() => { setStep("identify"); setError(""); }}
-              className="w-full mt-2 py-2 text-[12px] text-[var(--color-t3)] hover:text-[var(--color-t2)] transition-colors cursor-pointer"
-            >
-              ← Voltar
             </button>
           </div>
         )}
@@ -218,7 +151,7 @@ export default function LoginPage() {
               {loading ? "Entrando..." : "Entrar"}
             </button>
             <button
-              onClick={() => { setStep("department"); setError(""); setPassword(""); }}
+              onClick={() => { setStep("identify"); setError(""); setPassword(""); }}
               className="w-full mt-2 py-2 text-[12px] text-[var(--color-t3)] hover:text-[var(--color-t2)] transition-colors cursor-pointer"
             >
               ← Voltar
@@ -236,10 +169,10 @@ export default function LoginPage() {
               {user?.initials}
             </div>
             <h2 className="text-[18px] font-bold text-[var(--color-t1)] mb-1">
-              Bem-vindo(a), {user?.name}! 🚀
+              Bem-vindo(a), {user?.name}!
             </h2>
             <p className="text-[13px] text-[var(--color-t3)] mb-2">
-              {DEPT_MSGS[selectedDept] || "Sua plataforma está pronta."}
+              Sua plataforma está pronta.
             </p>
             <div className="flex items-center justify-center gap-2 mt-4">
               <div className="w-2 h-2 rounded-full bg-[var(--color-navy)] animate-pulse"></div>

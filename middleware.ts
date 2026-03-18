@@ -38,6 +38,20 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin));
   }
 
+  // Proteção por departamento: rotas /departments/{slug} só acessíveis
+  // ao membro do departamento, SUPER ou ADMIN
+  const deptRouteMatch = pathname.match(/^\/departments\/([^/]+)/);
+  if (deptRouteMatch) {
+    const routeSlug = deptRouteMatch[1];
+    const userDeptSlug = (user as any)?.departmentSlug as string | undefined;
+    const isGlobal = role === "SUPER" || role === "ADMIN";
+    if (!isGlobal && userDeptSlug !== routeSlug) {
+      // Redireciona para o próprio departamento ou para a lista geral
+      const fallback = userDeptSlug ? `/departments/${userDeptSlug}` : "/departments";
+      return NextResponse.redirect(new URL(fallback, req.nextUrl.origin));
+    }
+  }
+
   return NextResponse.next();
 });
 

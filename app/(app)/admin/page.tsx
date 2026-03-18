@@ -2,8 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Plus, Edit2, ShieldAlert, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Edit2, ShieldAlert, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const ROLE_MAP: Record<string, string> = {
+  SUPER: "Super Admin",
+  ADMIN: "Admin",
+  MANAGER: "Gerente",
+  EMPLOYEE: "Funcionário",
+  VIEWER: "Visualizador",
+};
 
 type User = {
   id: string;
@@ -86,6 +94,28 @@ export default function AdminPage() {
     setIsModalOpen(true);
   };
 
+  const handleDelete = async (user: User) => {
+    if (!window.confirm(`Tem certeza que deseja remover o usuário ${user.name}? Essa ação não pode ser desfeita.`)) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users?id=${user.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Erro ao excluir usuário.");
+      } else {
+        fetchData();
+      }
+    } catch (e) {
+      alert("Erro de conexão ao excluir usuário.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormLoading(true);
@@ -165,8 +195,8 @@ export default function AdminPage() {
                       <div className="text-[11px] text-[var(--color-t3)]">{user.email}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700">
-                        {user.role}
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700 uppercase">
+                        {ROLE_MAP[user.role] || user.role}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-[var(--color-t2)]">
@@ -183,13 +213,20 @@ export default function AdminPage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right flex justify-end items-center gap-1">
                       <button 
                         onClick={() => handleOpenModal(user)}
-                        className="p-1.5 text-[var(--color-t3)] hover:text-[var(--color-navy)] rounded hover:bg-slate-100 transition-colors"
+                        className="p-1.5 text-[var(--color-t3)] hover:text-[var(--color-navy)] rounded hover:bg-slate-100 transition-colors inline-block"
                         title="Editar"
                       >
                         <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(user)}
+                        className="p-1.5 text-[var(--color-t3)] hover:text-[var(--color-red)] rounded hover:bg-red-50 transition-colors inline-block"
+                        title="Excluir"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </td>
                   </tr>

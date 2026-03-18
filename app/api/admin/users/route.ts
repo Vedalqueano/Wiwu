@@ -139,3 +139,35 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+// DELETE /api/admin/users — Remove um usuário
+export async function DELETE(req: Request) {
+  try {
+    const adminUser = await requireAdmin();
+    const url = new URL(req.url);
+    const id = url.searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "Missing user ID" }, { status: 400 });
+    }
+
+    if (id === adminUser.id) {
+      return NextResponse.json({ error: "Você não pode excluir sua própria conta" }, { status: 403 });
+    }
+
+    await prisma.user.delete({
+      where: {
+        id,
+        companyId: adminUser.companyId
+      }
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (error: any) {
+    console.error("Error deleting user:", error);
+    if (error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}

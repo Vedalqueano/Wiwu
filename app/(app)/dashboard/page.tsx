@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import {
   FileText, Package, Truck, AlertTriangle,
@@ -70,6 +71,7 @@ function Activity({ title, meta, color, icon: Icon }: {
 
 /* ── Dashboard Page ──────────────────────── */
 export default function DashboardPage() {
+  const { data: session } = useSession();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -95,6 +97,11 @@ export default function DashboardPage() {
 
   return (
     <div className="animate-fade-in">
+      <div className="text-2xl font-bold tracking-tight mb-2">Bom dia, {session?.user?.name || "Usuário"}</div>
+      <div className="text-sm text-[var(--color-t3)] mb-6" suppressHydrationWarning>
+        {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+      </div>
+
       {/* KPIs — dados do banco */}
       <div className="grid grid-cols-4 gap-3 mb-4">
         <KpiCard label="Pedidos hoje" value={String(kpis?.totalOrders ?? 0)} delta="↑ +12% vs ontem" deltaType="up" color="blue" icon={FileText} />

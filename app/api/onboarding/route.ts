@@ -39,15 +39,14 @@ export async function PATCH(req: Request) {
           channels.map((ch: { id: string; name: string }) => 
             prisma.channelMember.upsert({
               where: {
-                userId_channelId: {
+                channelId_userId: {
                   userId: userId,
                   channelId: ch.id
                 }
               },
               create: {
                 userId: userId,
-                channelId: ch.id,
-                role: "MEMBER"
+                channelId: ch.id
               },
               update: {} // já é membro, ignora
             })

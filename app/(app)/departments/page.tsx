@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import {
   Users, FileText, BarChart3, ClipboardList, CalendarDays,
-  TrendingUp, Package, ShoppingBag, Headphones, Megaphone, Wallet, Monitor,
+  TrendingUp, Package, ShoppingBag, Headphones, Megaphone, Wallet,
   ChevronRight, BookOpen,
 } from "lucide-react";
 
@@ -74,16 +75,6 @@ const DEPARTMENTS = [
     channels: ["#financeiro"],
     processes: ["Conciliação Bancária", "Contas a Pagar", "Contas a Receber", "Relatórios Fiscais"],
   },
-  {
-    id: "ti", name: "TI", icon: Monitor, color: "#6B3FA0",
-    head: "Abbas", members: 1,
-    kpis: [
-      { label: "Uptime", value: "99.8%", delta: "estável", good: true },
-      { label: "Tickets TI", value: "3", delta: "1 crítico", good: false },
-    ],
-    channels: ["#ti-geral"],
-    processes: ["Suporte Interno", "Manutenção de Sistemas", "Segurança da Informação"],
-  },
 ];
 
 const TABS = [
@@ -96,8 +87,27 @@ const TABS = [
 
 export default function DepartmentsPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const user = session?.user as any;
+  const isGlobal = user?.role === "SUPER" || user?.role === "ADMIN";
+  const userDeptSlug = user?.departmentSlug as string | undefined;
+
+  // SUPER e ADMIN veem todos; demais veem apenas o próprio departamento
+  const visibleDepts = isGlobal
+    ? DEPARTMENTS
+    : DEPARTMENTS.filter((d) => d.id === userDeptSlug);
+
   const [activeDept, setActiveDept] = useState(DEPARTMENTS[0]);
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Quando a sessão carrega, ajusta o dept ativo para o do usuário (se não for global)
+  useEffect(() => {
+    if (!isGlobal && userDeptSlug) {
+      const myDept = DEPARTMENTS.find((d) => d.id === userDeptSlug);
+      if (myDept) setActiveDept(myDept);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userDeptSlug, isGlobal]);
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [policiesLoading, setPoliciesLoading] = useState(false);
 
@@ -123,10 +133,10 @@ export default function DepartmentsPage() {
       <div className="w-[220px] bg-white border-r border-[var(--color-border)] flex flex-col shrink-0">
         <div className="p-3.5 border-b border-[var(--color-border)]">
           <h2 className="text-[13px] font-bold text-[var(--color-t1)]">Departamentos</h2>
-          <p className="text-[11px] text-[var(--color-t3)] mt-0.5">{DEPARTMENTS.length} departamentos</p>
+          <p className="text-[11px] text-[var(--color-t3)] mt-0.5">{visibleDepts.length} departamento{visibleDepts.length !== 1 ? "s" : ""}</p>
         </div>
         <div className="flex-1 overflow-y-auto py-1.5">
-          {DEPARTMENTS.map((dept) => {
+          {visibleDepts.map((dept) => {
             const isActive = dept.id === activeDept.id;
             return (
               <button

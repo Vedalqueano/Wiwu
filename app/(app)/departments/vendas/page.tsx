@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   ShoppingBag, TrendingUp, Target, ClipboardCheck, BarChart3,
@@ -60,7 +62,21 @@ const ABASTECIMENTO = [
 
 /* ═══════════════════════════════════════════════ */
 export default function VendasPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("Dashboard");
+
+  useEffect(() => {
+    if (status === "loading") return;
+    const user = session?.user as any;
+    const role = user?.role as string | undefined;
+    const isGlobal = role === "SUPER" || role === "ADMIN";
+    if (!isGlobal && user?.departmentSlug !== "vendas") {
+      router.replace(user?.departmentSlug ? `/departments/${user.departmentSlug}` : "/departments");
+    }
+  }, [session, status, router]);
+
+  if (status === "loading") return null;
   const [formProd, setFormProd] = useState("");
   const [formQtd, setFormQtd] = useState("1");
   const [formTipo, setFormTipo] = useState("Varejo");

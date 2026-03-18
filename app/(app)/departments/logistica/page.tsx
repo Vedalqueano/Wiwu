@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   FileText, Package, Truck, AlertTriangle, RotateCcw, Warehouse,
@@ -47,8 +49,22 @@ const STATUS_MAP: Record<string, { label: string; cls: string }> = {
    COMPONENTE PRINCIPAL
    ═══════════════════════════════════════════════ */
 export default function LogisticaPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [sepStep, setSepStep] = useState(0);
+
+  useEffect(() => {
+    if (status === "loading") return;
+    const user = session?.user as any;
+    const role = user?.role as string | undefined;
+    const isGlobal = role === "SUPER" || role === "ADMIN";
+    if (!isGlobal && user?.departmentSlug !== "logistica") {
+      router.replace(user?.departmentSlug ? `/departments/${user.departmentSlug}` : "/departments");
+    }
+  }, [session, status, router]);
+
+  if (status === "loading") return null;
 
   return (
     <div className="animate-fade-in">

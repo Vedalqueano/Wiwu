@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -70,8 +71,8 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div className="px-4 py-5 border-b border-[var(--color-border)] flex items-center gap-2.5">
-        <div className="w-[34px] h-[34px] rounded-full bg-[var(--color-navy)] flex items-center justify-center text-white text-xs font-bold shrink-0">
-          W
+        <div className="w-[34px] h-[34px] flex items-center justify-center shrink-0">
+          <Image src="/logo.png" alt="WiWU Logo" width={34} height={34} className="object-contain" priority />
         </div>
         {!collapsed && (
           <div className="text-[13px] font-bold text-[var(--color-t1)] tracking-tight">WiWU Flow</div>

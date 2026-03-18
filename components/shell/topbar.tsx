@@ -50,7 +50,7 @@ export function TopBar({ title }: TopBarProps) {
 
           {/* Date */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-page)] border border-[var(--color-border)] rounded-full">
-            <span className="text-[12px] text-[var(--color-t2)] font-medium">{dateStr}</span>
+            <span className="text-[12px] text-[var(--color-t2)] font-medium" suppressHydrationWarning>{dateStr}</span>
           </div>
 
           {/* Notification bell */}
