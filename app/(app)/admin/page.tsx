@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Plus, Edit2, ShieldAlert, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { Plus, Edit2, ShieldAlert, CheckCircle2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ROLE_MAP: Record<string, string> = {
@@ -203,15 +203,9 @@ export default function AdminPage() {
                       {user.department?.name || <span className="text-slate-400 italic">Nenhum</span>}
                     </td>
                     <td className="px-6 py-4">
-                      {user.onboarded ? (
-                        <span className="inline-flex items-center text-[12px] text-green-600 font-medium">
-                          <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Ativo
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center text-[12px] text-orange-500 font-medium">
-                          <XCircle className="w-3.5 h-3.5 mr-1" /> Pendente (Onb.)
-                        </span>
-                      )}
+                      <span className="inline-flex items-center text-[12px] text-green-600 font-medium">
+                        <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Ativo
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-right flex justify-end items-center gap-1">
                       <button 
@@ -314,7 +308,7 @@ export default function AdminPage() {
                     className="w-full px-3 py-2 border border-[var(--color-border)] rounded-[var(--radius-sm)] text-[13px] outline-none focus:border-[var(--color-navy)] bg-white"
                   >
                     <option value="none">Nenhum</option>
-                    {departments.map((d) => (
+                    {departments.filter((d) => d.name !== "TI").map((d) => (
                       <option key={d.id} value={d.id}>{d.name}</option>
                     ))}
                   </select>
