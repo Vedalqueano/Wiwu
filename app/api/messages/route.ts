@@ -5,7 +5,20 @@ import { canAccess } from "@/lib/rbac";
 
 export async function GET() {
   try {
+    const session = await auth();
+    const userId = (session?.user as any)?.id as string | undefined;
+    const role = (session?.user as any)?.role as string | undefined;
+    const isSuper = role === "SUPER";
+
     const messages = await prisma.message.findMany({
+      where: isSuper || !userId ? undefined : {
+        channel: {
+          OR: [
+            { type: { not: "DIRECT" } },
+            { type: "DIRECT", members: { some: { userId } } },
+          ],
+        },
+      },
       orderBy: { createdAt: "asc" },
       include: {
         user: { select: { id: true, name: true, initials: true, color: true, presence: true } },
