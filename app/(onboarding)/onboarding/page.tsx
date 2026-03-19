@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
-  Sparkles, User, Users, MessageSquare, CheckSquare,
+  Sparkles, User, Users, MessageSquare, BookOpen,
   Bell, Rocket, ChevronRight, ChevronLeft, Check,
 } from "lucide-react";
 
@@ -14,7 +14,7 @@ const STEPS = [
     id: 1,
     icon: Sparkles,
     title: "Bem-vindo ao WiWU Flow!",
-    subtitle: "Sua plataforma de trabalho inteligente",
+    subtitle: "Sua central de comunicação interna",
     color: "#050A2D",
   },
   {
@@ -40,9 +40,9 @@ const STEPS = [
   },
   {
     id: 5,
-    icon: CheckSquare,
-    title: "Tarefas & Projetos",
-    subtitle: "Organize o trabalho do seu time",
+    icon: BookOpen,
+    title: "Processos da empresa",
+    subtitle: "Consulte os procedimentos do seu setor",
     color: "#F59E0B",
   },
   {
@@ -75,7 +75,7 @@ export default function OnboardingPage() {
     mensoes: true,
     dms: true,
     tarefas: true,
-    estoque: true,
+    avisos: true,
   });
 
   const currentStep = STEPS[step];
@@ -214,13 +214,13 @@ function StepContent({
       return (
         <div className="flex flex-col gap-3">
           <p className="text-[13px] text-[var(--color-t2)] leading-relaxed">
-            O <strong>WiWU Flow</strong> é a sua central de trabalho — comunicação, tarefas e gestão em um só lugar, pensado para a sua empresa.
+            O <strong>WiWU Flow</strong> é a sua central de comunicação interna — mural de avisos, chat em tempo real e processos da empresa em um só lugar.
           </p>
           <div className="grid grid-cols-2 gap-2 mt-2">
             {[
-              { label: "Canais de chat", desc: "Em tempo real" },
-              { label: "Kanban de tarefas", desc: "Organize projetos" },
-              { label: "Módulos por área", desc: "Logística, Vendas..." },
+              { label: "Mural de avisos", desc: "Comunicados e tarefas" },
+              { label: "Chat em tempo real", desc: "Canais e mensagens diretas" },
+              { label: "Processos", desc: "Documentação da empresa" },
               { label: "Notificações", desc: "Fique sempre por dentro" },
             ].map((f) => (
               <div key={f.label} className="bg-[var(--color-page)] rounded-[var(--radius-sm)] p-3 border border-[var(--color-border)]">
@@ -344,26 +344,23 @@ function StepContent({
       return (
         <div className="flex flex-col gap-3">
           <p className="text-[13px] text-[var(--color-t2)] leading-relaxed">
-            O <strong>Kanban de Tarefas</strong> organiza o trabalho em colunas de progresso, para sua equipe sempre saber o que está acontecendo.
+            Na aba <strong>Processos</strong> você encontra toda a documentação operacional da empresa, organizada por departamento.
           </p>
-          <div className="grid grid-cols-4 gap-1.5">
+          <div className="grid grid-cols-2 gap-1.5">
             {[
-              { label: "A fazer", color: "bg-[var(--color-border)]" },
-              { label: "Em progresso", color: "bg-blue-100" },
-              { label: "Revisão", color: "bg-amber-100" },
-              { label: "Concluído", color: "bg-green-100" },
-            ].map((col) => (
-              <div key={col.label} className={cn("rounded-[var(--radius-sm)] p-2 text-center", col.color)}>
-                <div className="text-[10px] font-bold text-[var(--color-t2)]">{col.label}</div>
-                <div className="mt-1.5 space-y-1">
-                  <div className="h-4 bg-white/70 rounded" />
-                  <div className="h-4 bg-white/70 rounded" />
-                </div>
+              { label: "Logística", desc: "Separação, conferência, envios" },
+              { label: "Loja / Vendas", desc: "Inventário, abastecimento" },
+              { label: "Gestão", desc: "Reuniões, vitrine" },
+              { label: "Garantia / SAC", desc: "Garantia, atendimento" },
+            ].map((area) => (
+              <div key={area.label} className="rounded-[var(--radius-sm)] p-3 bg-[var(--color-page)] border border-[var(--color-border)]">
+                <div className="text-[11px] font-bold text-[var(--color-t1)]">{area.label}</div>
+                <div className="text-[10px] text-[var(--color-t3)] mt-0.5">{area.desc}</div>
               </div>
             ))}
           </div>
           <p className="text-[11.5px] text-[var(--color-t3)]">
-            Arraste tarefas entre colunas ou clique para avançar o status.
+            Consulte sempre que tiver dúvidas sobre como executar uma tarefa.
           </p>
         </div>
       );
@@ -383,7 +380,7 @@ function StepContent({
               { id: "mensoes", label: "Menções diretas (@você)" },
               { id: "dms", label: "Mensagens privadas (DMs)" },
               { id: "tarefas", label: "Atualizações em suas tarefas" },
-              { id: "estoque", label: "Alertas críticos de estoque/vendas" },
+              { id: "avisos", label: "Comunicados e avisos gerais" },
             ].map((n) => {
               const isActive = notifications[n.id as keyof typeof notifications];
               return (
@@ -421,7 +418,7 @@ function StepContent({
               "Perfil configurado",
               "Equipe conectada",
               "Canais disponíveis",
-              "Tarefas prontas",
+              "Processos acessíveis",
               "Notificações ativas",
             ].map((item) => (
               <div key={item} className="flex items-center gap-2.5 px-3 py-2 bg-[var(--color-page)] rounded-[var(--radius-sm)] border border-[var(--color-border)]">

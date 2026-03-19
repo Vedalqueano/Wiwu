@@ -67,17 +67,6 @@ async function main() {
     ],
   });
 
-  // ── INVENTÁRIO ─────────────────────────────
-  await prisma.inventoryItem.createMany({
-    data: [
-      { sku: "WW-CHG-65W", name: "Carregador USB-C 65W", category: "Carregadores", quantity: 3, minimum: 15, location: "A-01" },
-      { sku: "WW-HUB-7C", name: "Hub USB-C 7 em 1", category: "Conectividade", quantity: 41, minimum: 10, location: "A-05" },
-      { sku: "WW-FONE-BT", name: "Fone Bluetooth ANC", category: "Áudio", quantity: 11, minimum: 20, location: "C-02" },
-      { sku: "WW-MOUSE-W", name: "Mouse Wireless WiWU", category: "Periféricos", quantity: 28, minimum: 10, location: "B-01" },
-      { sku: "WW-CABO-TC", name: "Cabo Type-C 2m", category: "Cabos", quantity: 52, minimum: 30, location: "A-02" },
-    ],
-  });
-
   // ── TAREFAS ────────────────────────────────
   await prisma.task.createMany({
     data: [

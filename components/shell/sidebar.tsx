@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard, MessageSquare, Building2, CheckSquare, Users,
+  Newspaper, MessageSquare, Users,
   Bell, LogOut, ChevronLeft, Settings, BookOpen,
 } from "lucide-react";
 import { canAccess, NAV_MIN_ROLE, type UserRole } from "@/lib/rbac";
@@ -18,12 +18,10 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
   {
     label: "Principal",
     items: [
-      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      { name: "Canais", href: "/channels", icon: MessageSquare, badge: 3 },
-      { name: "Departamentos", href: "/departments", icon: Building2 },
-      { name: "Tarefas", href: "/tasks", icon: CheckSquare },
+      { name: "Mural", href: "/dashboard", icon: Newspaper },
+      { name: "Chat", href: "/channels", icon: MessageSquare },
+      { name: "Processos", href: "/knowledge-base", icon: BookOpen },
       { name: "Membros", href: "/people", icon: Users },
-      { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
     ],
   },
   {
@@ -36,7 +34,7 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
   {
     label: "Administração",
     items: [
-      { name: "Painel Admin", href: "/admin", icon: Settings }, // Pode usar icon diferente como Shield ou Settings
+      { name: "Painel Admin", href: "/admin", icon: Settings },
     ],
   },
 ];
@@ -90,14 +88,13 @@ export function Sidebar() {
 
       {/* Department badge — data from session */}
       {!collapsed && (
-        <Link
-          href={deptSlug ? `/departments/${deptSlug}` : "/departments"}
-          className="mx-2.5 mt-2.5 mb-1.5 flex items-center gap-2 p-2.5 bg-[var(--color-navy)] rounded-[var(--radius-sm)] hover:bg-[var(--color-navy-2)] transition-colors"
+        <div
+          className="mx-2.5 mt-2.5 mb-1.5 flex items-center gap-2 p-2.5 bg-[var(--color-navy)] rounded-[var(--radius-sm)]"
         >
           <div className="w-[7px] h-[7px] rounded-full bg-[var(--color-red)] shrink-0" />
           <span className="text-[12px] font-bold text-white">{deptName}</span>
           <span className="text-[10px] text-white/45 ml-auto">{userRole}</span>
-        </Link>
+        </div>
       )}
 
       {/* Navigation */}

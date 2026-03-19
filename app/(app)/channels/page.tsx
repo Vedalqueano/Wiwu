@@ -4,10 +4,10 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { useSocket } from "@/hooks/use-socket";
-import { Hash, Lock, Megaphone, Send, Smile, Paperclip, AtSign, Loader2, MessageSquare } from "lucide-react";
+import { Hash, Lock, Megaphone, Send, Paperclip, AtSign, Loader2, MessageSquare } from "lucide-react";
 
 type Channel = { id: string; name: string; slug: string; type: string; description: string; departmentName?: string; messageCount: number; memberCount: number };
-type Message = { id: string; content: string; channelId: string; channelName: string; userId: string; userName: string; userInitials: string; userColor: string; userPresence: string; reactions: { emoji: string; userName: string }[]; createdAt: string };
+type Message = { id: string; content: string; channelId: string; channelName: string; userId: string; userName: string; userInitials: string; userColor: string; userPresence: string; createdAt: string };
 type Member = { id: string; name: string; initials: string; color: string; role: string; presence: string; departmentName: string };
 
 const ROLE_MAP: Record<string, string> = { SUPER: "Super Admin", ADMIN: "Admin", MANAGER: "Gerente", EMPLOYEE: "Funcionário", VIEWER: "Visualizador" };
@@ -384,21 +384,6 @@ export default function ChannelsPage() {
                       {renderMentions(msg.content, members, handleMentionClick)}
                     </p>
 
-                    {msg.reactions.length > 0 && (
-                      <div className="flex gap-1.5 mt-2">
-                        {msg.reactions.map((r, ri) => (
-                          <span key={ri} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] cursor-pointer hover:bg-slate-200 transition-colors">
-                            {r.emoji} <span className="font-semibold text-slate-600">{r.userName}</span>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Hover Actions */}
-                  <div className="opacity-0 group-hover:opacity-100 absolute right-4 top-0 -translate-y-2 bg-white border border-slate-200 shadow-sm rounded-md flex items-center overflow-hidden transition-opacity">
-                    <button className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer" title="Adicionar Reação"><Smile className="w-4 h-4" /></button>
-                    <button className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer" title="Responder em Thread"><MessageSquare className="w-4 h-4" /></button>
                   </div>
                 </div>
               );
@@ -475,7 +460,6 @@ export default function ChannelsPage() {
                 >
                   <AtSign className="w-4 h-4" />
                 </button>
-                <button className="p-1.5 rounded text-[var(--color-t3)] hover:text-slate-700 hover:bg-slate-200/50 transition-colors cursor-pointer" title="Emoji"><Smile className="w-4 h-4" /></button>
               </div>
               <button
                 onClick={handleSend}

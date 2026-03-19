@@ -17,14 +17,12 @@ export function canAccess(userRole: string | undefined, minRole: UserRole): bool
 
 // Role mínima exigida por rota (rotas não listadas = qualquer autenticado)
 export const ROUTE_MIN_ROLE: Record<string, UserRole> = {
-  "/settings": "ADMIN",  // só ADMIN e SUPER
-  "/admin": "ADMIN",     // Painel Admin exclusivo para gestores
-  "/tasks": "EMPLOYEE",  // VIEWER não acessa
+  "/settings": "ADMIN",
+  "/admin": "ADMIN",
 };
 
 // Role mínima por item da sidebar (undefined = qualquer autenticado)
 export const NAV_MIN_ROLE: Record<string, UserRole> = {
   "/settings": "ADMIN",
   "/admin": "ADMIN",
-  "/tasks": "EMPLOYEE",
 };

@@ -41,9 +41,6 @@ model Department {
   users    User[]
   channels Channel[]
   policies Policy[]
-  schedules Schedule[]
-  kpis     KPI[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -179,8 +176,6 @@ enum NotificationType {
   TASK_ASSIGNED
   TASK_DUE
   PROCESS_UPDATE
-  SCHEDULE_PUBLISHED
-  LOW_STOCK
   ANNOUNCEMENT
   SYSTEM
 }
@@ -242,70 +237,6 @@ model Task {
 
   creator  User  @relation("TaskCreator", fields: [creatorId], references: [id])
   assignee User? @relation("TaskAssignee", fields: [assigneeId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// ── ESCALAS ────────────────────────────────────────
-model Schedule {
-  id           String @id @default(cuid())
-  title        String
-  departmentId String
-  weekData     Json   // { "seg": "08:00-17:00", "ter": "08:00-17:00", ... }
-  published    Boolean @default(false)
-
-  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// ── INVENTÁRIO ─────────────────────────────────────
-model InventoryItem {
-  id       String @id @default(cuid())
-  sku      String @unique
-  name     String
-  category String
-  quantity Int    @default(0)
-  minimum  Int    @default(0)
-  location String?
-
-  movements InventoryMovement[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-enum MovementType {
-  IN
-  OUT
-  ADJUSTMENT
-}
-
-model InventoryMovement {
-  id     String       @id @default(cuid())
-  type   MovementType
-  qty    Int
-  reason String?
-  itemId String
-
-  item InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-}
-
-// ── KPIs ───────────────────────────────────────────
-model KPI {
-  id           String @id @default(cuid())
-  name         String
-  value        Float
-  target       Float?
-  unit         String? // "%", "R$", "un"
-  departmentId String
-  period       String  // "daily", "weekly", "monthly"
-
-  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

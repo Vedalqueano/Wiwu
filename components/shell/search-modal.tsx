@@ -184,7 +184,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
                   {results.tasks.map((t) => (
                     <ResultItem
                       key={t.id}
-                      onClick={() => navigate("/tasks")}
+                      onClick={() => navigate("/dashboard")}
                       left={
                         <div className="w-7 h-7 rounded-lg bg-[var(--color-page)] border border-[var(--color-border)] flex items-center justify-center shrink-0">
                           <CheckSquare className="w-3.5 h-3.5 text-[var(--color-t3)]" />
@@ -234,7 +234,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
 
               {/* Políticas */}
               {results.policies.length > 0 && (
-                <Section label="Knowledge Base" icon={BookOpen}>
+                <Section label="Processos" icon={BookOpen}>
                   {results.policies.map((p) => (
                     <ResultItem
                       key={p.id}
