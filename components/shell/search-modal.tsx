@@ -100,10 +100,10 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] bg-black/40"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[5vh] md:pt-[10vh] bg-black/40 px-4 md:px-0"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-lg)] w-full max-w-[580px] overflow-hidden">
+      <div className="bg-white rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-lg)] w-full max-w-[580px] overflow-hidden max-h-[80vh] flex flex-col">
         {/* Input */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[var(--color-border)]">
           {loading

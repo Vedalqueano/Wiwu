@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { useSocket } from "@/hooks/use-socket";
-import { Search, MessageSquare, Send, Loader2 } from "lucide-react";
+import { Search, MessageSquare, Send, Loader2, ArrowLeft } from "lucide-react";
 
 type Member = { id: string; name: string; email: string; initials: string; color: string; role: string; presence: string; departmentName: string; departmentSlug: string; lastSeen: string | null };
 type DmMessage = { id: string; content: string; channelId: string; channelName: string; userId: string; userName: string; userInitials: string; userColor: string; userPresence: string; reactions: { emoji: string; userName: string }[]; createdAt: string };
@@ -120,9 +120,12 @@ export default function PeoplePage() {
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-6 h-6 text-[var(--color-navy)] animate-spin" /><span className="ml-2 text-[13px] text-[var(--color-t3)]">Carregando membros...</span></div>;
 
   return (
-    <div className="flex h-full -m-[22px] animate-fade-in">
+    <div className="flex h-full -m-4 md:-m-[22px] animate-fade-in">
       {/* Lista de membros */}
-      <div className="w-[280px] bg-white border-r border-[var(--color-border)] flex flex-col shrink-0">
+      <div className={cn(
+        "w-full md:w-[280px] bg-white border-r border-[var(--color-border)] flex flex-col shrink-0",
+        selected ? "hidden md:flex" : "flex"
+      )}>
         <div className="p-3.5 border-b border-[var(--color-border)]">
           <div className="flex items-center gap-2 px-2.5 py-1.5 bg-[var(--color-page)] border border-[var(--color-border)] rounded-[var(--radius-sm)]">
             <Search className="w-3.5 h-3.5 text-[var(--color-t3)]" />
@@ -158,10 +161,17 @@ export default function PeoplePage() {
 
       {/* Área de DM */}
       {selected ? (
-        <div className="flex-1 flex flex-col bg-[var(--color-page)]">
+        <div className={cn("flex-1 flex flex-col bg-[var(--color-page)]", selected ? "flex" : "hidden md:flex")}>
           {/* Header */}
-          <div className="bg-white border-b border-[var(--color-border)] p-5">
-            <div className="flex items-center gap-4">
+          <div className="bg-white border-b border-[var(--color-border)] p-4 md:p-5">
+            <div className="flex items-center gap-3 md:gap-4">
+              {/* Back button — mobile */}
+              <button
+                onClick={() => setSelected(null)}
+                className="w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center text-[var(--color-t2)] hover:bg-[var(--color-page)] transition-colors cursor-pointer md:hidden"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
               <div className="relative">
                 <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white" style={{ background: selected.color }}>{selected.initials}</div>
                 <div className={cn("absolute bottom-0 right-0 w-[13px] h-[13px] rounded-full border-[2.5px] border-white", STATUS_MAP[selected.presence]?.color)} />
@@ -239,7 +249,7 @@ export default function PeoplePage() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center bg-[var(--color-page)]">
+        <div className="hidden md:flex flex-1 items-center justify-center bg-[var(--color-page)]">
           <div className="text-center">
             <div className="text-3xl mb-3">👥</div>
             <p className="text-[14px] font-bold text-[var(--color-t1)]">Selecione um membro</p>

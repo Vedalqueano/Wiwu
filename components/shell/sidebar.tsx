@@ -8,7 +8,7 @@ import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import {
   Newspaper, MessageSquare, Users,
-  Bell, LogOut, ChevronLeft, Settings, BookOpen,
+  Bell, LogOut, ChevronLeft, Settings, BookOpen, X,
 } from "lucide-react";
 import { canAccess, NAV_MIN_ROLE, type UserRole } from "@/lib/rbac";
 
@@ -47,7 +47,12 @@ const ROLE_MAP: Record<string, string> = {
   VIEWER: "Visualizador",
 };
 
-export function Sidebar() {
+interface SidebarProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const { data: session } = useSession();
@@ -58,12 +63,16 @@ export function Sidebar() {
   const userColor = user?.color || "#050A2D";
   const userRole = ROLE_MAP[user?.role] || user?.role || "—";
   const deptName = user?.departmentName || "—";
-  const deptSlug = user?.departmentSlug || "";
 
-  return (
+  const handleNavClick = () => {
+    // Fechar sidebar em mobile ao navegar
+    onClose();
+  };
+
+  const sidebarContent = (
     <aside
       className={cn(
-        "flex flex-col bg-white border-r border-[var(--color-border)] shrink-0 transition-all duration-200",
+        "flex flex-col bg-white border-r border-[var(--color-border)] shrink-0 transition-all duration-200 h-full",
         collapsed ? "w-[60px]" : "w-[220px]"
       )}
     >
@@ -75,22 +84,28 @@ export function Sidebar() {
         {!collapsed && (
           <div className="text-[13px] font-bold text-[var(--color-t1)] tracking-tight">WiWU Flow</div>
         )}
+        {/* Collapse button — desktop only */}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
-            "ml-auto w-6 h-6 rounded flex items-center justify-center text-[var(--color-t3)] hover:bg-[var(--color-page)] transition-all cursor-pointer",
+            "ml-auto w-6 h-6 rounded flex items-center justify-center text-[var(--color-t3)] hover:bg-[var(--color-page)] transition-all cursor-pointer hidden md:flex",
             collapsed && "ml-0"
           )}
         >
           <ChevronLeft className={cn("w-3.5 h-3.5 transition-transform", collapsed && "rotate-180")} />
         </button>
+        {/* Close button — mobile only */}
+        <button
+          onClick={onClose}
+          className="ml-auto w-6 h-6 rounded flex items-center justify-center text-[var(--color-t3)] hover:bg-[var(--color-page)] transition-all cursor-pointer md:hidden"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
-      {/* Department badge — data from session */}
+      {/* Department badge */}
       {!collapsed && (
-        <div
-          className="mx-2.5 mt-2.5 mb-1.5 flex items-center gap-2 p-2.5 bg-[var(--color-navy)] rounded-[var(--radius-sm)]"
-        >
+        <div className="mx-2.5 mt-2.5 mb-1.5 flex items-center gap-2 p-2.5 bg-[var(--color-navy)] rounded-[var(--radius-sm)]">
           <div className="w-[7px] h-[7px] rounded-full bg-[var(--color-red)] shrink-0" />
           <span className="text-[12px] font-bold text-white">{deptName}</span>
           <span className="text-[10px] text-white/45 ml-auto">{userRole}</span>
@@ -115,6 +130,7 @@ export function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={handleNavClick}
                   className={cn(
                     "relative flex items-center gap-2.5 mx-1.5 my-0.5 rounded-[var(--radius-sm)] transition-all",
                     collapsed ? "justify-center p-2" : "px-2.5 py-[7px]",
@@ -157,7 +173,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* User — data from session */}
+      {/* User */}
       <div className={cn(
         "border-t border-[var(--color-border)] flex items-center gap-2.5",
         collapsed ? "justify-center p-3" : "p-3"
@@ -186,5 +202,26 @@ export function Sidebar() {
         )}
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop — sidebar fixa */}
+      <div className="hidden md:flex">
+        {sidebarContent}
+      </div>
+
+      {/* Mobile — drawer overlay */}
+      {open && (
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+          {/* Sidebar */}
+          <div className="relative z-10 animate-slide-in-left">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

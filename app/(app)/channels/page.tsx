@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { useSocket } from "@/hooks/use-socket";
-import { Hash, Lock, Megaphone, Send, Paperclip, AtSign, Loader2, MessageSquare } from "lucide-react";
+import { Hash, Lock, Megaphone, Send, Paperclip, AtSign, Loader2, MessageSquare, ArrowLeft } from "lucide-react";
 
 type Channel = { id: string; name: string; slug: string; type: string; description: string; departmentName?: string; messageCount: number; memberCount: number };
 type Message = { id: string; content: string; channelId: string; channelName: string; userId: string; userName: string; userInitials: string; userColor: string; userPresence: string; createdAt: string };
@@ -57,6 +57,7 @@ export default function ChannelsPage() {
   const [mentionOpen, setMentionOpen] = useState(false);
   const [mentionFilter, setMentionFilter] = useState("");
   const [mentionResults, setMentionResults] = useState<Member[]>([]);
+  const [showChat, setShowChat] = useState(false); // mobile toggle
   const msgEnd = useRef<HTMLDivElement>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -123,12 +124,19 @@ export default function ChannelsPage() {
     });
 
     setActiveChannelId(channelId);
+    setShowChat(true);
   }, [session, members]);
 
   /* ── Clique numa @menção → abre DM ──────────────────────────────── */
   const handleMentionClick = useCallback((memberId: string) => {
     openDm(memberId);
   }, [openDm]);
+
+  /* ── Selecionar canal (mobile: mostrar chat) ──────────────────────── */
+  const selectChannel = (channelId: string) => {
+    setActiveChannelId(channelId);
+    setShowChat(true);
+  };
 
   const allChannels = [...channels, ...dmChannels];
   const activeChannel = allChannels.find((c) => c.id === activeChannelId);
@@ -210,9 +218,12 @@ export default function ChannelsPage() {
   );
 
   return (
-    <div className="flex h-full -m-[22px] bg-white">
-      {/* Secondary Sidebar */}
-      <div className="w-[260px] bg-slate-50 border-r border-[var(--color-border)] flex flex-col shrink-0">
+    <div className="flex h-full -m-4 md:-m-[22px] bg-white">
+      {/* Secondary Sidebar — channel list */}
+      <div className={cn(
+        "w-full md:w-[260px] bg-slate-50 border-r border-[var(--color-border)] flex flex-col shrink-0",
+        showChat ? "hidden md:flex" : "flex"
+      )}>
         <div className="p-4 border-b border-[var(--color-border)]">
           <h2 className="text-[15px] font-bold text-[var(--color-t1)] tracking-tight">Comunicação</h2>
           <p className="text-[11px] text-[var(--color-t3)] mt-0.5">{channels.length} canais disponíveis</p>
@@ -226,7 +237,7 @@ export default function ChannelsPage() {
             return (
               <button
                 key={ch.id}
-                onClick={() => setActiveChannelId(ch.id)}
+                onClick={() => selectChannel(ch.id)}
                 className={cn(
                   "relative w-full flex items-center gap-2.5 px-3 py-2 mb-0.5 rounded-md text-left transition-all cursor-pointer group",
                   isActive ? "bg-[var(--color-navy-light)] text-[var(--color-navy)]" : "hover:bg-slate-200/50 text-[var(--color-t2)]"
@@ -254,7 +265,7 @@ export default function ChannelsPage() {
                 return (
                   <button
                     key={ch.id}
-                    onClick={() => setActiveChannelId(ch.id)}
+                    onClick={() => selectChannel(ch.id)}
                     className={cn(
                       "relative w-full flex items-center gap-2.5 px-3 py-2 mb-0.5 rounded-md text-left transition-all cursor-pointer group",
                       isActive ? "bg-[var(--color-navy-light)] text-[var(--color-navy)]" : "hover:bg-slate-200/50 text-[var(--color-t2)]"
@@ -276,8 +287,8 @@ export default function ChannelsPage() {
           )}
         </div>
 
-        {/* Online members — clicar abre DM */}
-        <div className="border-t border-[var(--color-border)] p-4 bg-slate-100/50">
+        {/* Online members — hidden on mobile to save space, visible on md+ */}
+        <div className="border-t border-[var(--color-border)] p-4 bg-slate-100/50 hidden md:block">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-bold text-[var(--color-t3)] uppercase tracking-wider">
               Online ({onlineMembers.length})
@@ -303,19 +314,29 @@ export default function ChannelsPage() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col bg-white relative min-w-0">
+      <div className={cn(
+        "flex-1 flex flex-col bg-white relative min-w-0",
+        showChat ? "flex" : "hidden md:flex"
+      )}>
         {/* Header */}
-        <div className="absolute top-0 left-0 right-0 z-10 h-[60px] bg-white/80 backdrop-blur-md border-b border-[var(--color-border)] flex items-center px-6 gap-3">
+        <div className="absolute top-0 left-0 right-0 z-10 h-[60px] bg-white/80 backdrop-blur-md border-b border-[var(--color-border)] flex items-center px-4 md:px-6 gap-3">
+          {/* Back button — mobile only */}
+          <button
+            onClick={() => setShowChat(false)}
+            className="w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center text-[var(--color-t2)] hover:bg-[var(--color-page)] transition-colors cursor-pointer md:hidden"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           {(() => { const Icon = iconMap[activeChannel?.type || "PUBLIC"] || Hash; return <Icon className="w-5 h-5 text-[var(--color-t2)]" />; })()}
-          <div>
-            <h1 className="text-[16px] font-bold text-[var(--color-t1)] leading-none mb-1">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[16px] font-bold text-[var(--color-t1)] leading-none mb-1 truncate">
               {activeChannel?.name || "Selecione um canal"}
             </h1>
-            <p className="text-[12px] text-[var(--color-t3)] leading-none">
+            <p className="text-[12px] text-[var(--color-t3)] leading-none truncate">
               {activeChannel?.type === "DIRECT" ? "Conversa privada" : (activeChannel?.description || "Bem-vindo ao canal!")}
             </p>
           </div>
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto items-center gap-4 hidden md:flex">
             <div className="flex items-center -space-x-2">
               {members.slice(0, 3).map((m, i) => (
                 <div key={i} className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-bold text-white shadow-sm" style={{ background: m.color, zIndex: 10 - i }}>
@@ -333,13 +354,13 @@ export default function ChannelsPage() {
         </div>
 
         {/* Messages Stream */}
-        <div className="flex-1 overflow-y-auto pt-[80px] pb-4 px-6 flex flex-col gap-4">
+        <div className="flex-1 overflow-y-auto pt-[80px] pb-4 px-4 md:px-6 flex flex-col gap-4">
           {channelMsgs.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center opacity-70">
               <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-inner">
                 {activeChannel?.type === "DIRECT" ? "💬" : "💭"}
               </div>
-              <h3 className="text-[15px] font-bold text-[var(--color-t1)] mb-1">
+              <h3 className="text-[15px] font-bold text-[var(--color-t1)] mb-1 text-center">
                 {activeChannel?.type === "DIRECT"
                   ? `Início da conversa com ${activeChannel.name}`
                   : `Este é o começo do canal #${activeChannel?.name}`}
@@ -366,12 +387,12 @@ export default function ChannelsPage() {
                     </div>
                   )}
 
-                  <div className="flex-1 min-w-0 pr-16">
+                  <div className="flex-1 min-w-0 pr-2 md:pr-16">
                     {!isGrouped && (
-                      <div className="flex items-baseline gap-2 mb-0.5">
+                      <div className="flex items-baseline gap-2 mb-0.5 flex-wrap">
                         <span className="text-[14px] font-bold text-[var(--color-t1)] hover:underline cursor-pointer">{msg.userName}</span>
                         {msgMember && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100/80 text-slate-500">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100/80 text-slate-500 hidden sm:inline-flex">
                             {msgMember.departmentName && msgMember.departmentName !== "—" ? msgMember.departmentName : ROLE_MAP[msgMember.role] || msgMember.role}
                           </span>
                         )}
@@ -380,10 +401,9 @@ export default function ChannelsPage() {
                         </span>
                       </div>
                     )}
-                    <p className="text-[14px] text-slate-800 leading-normal">
+                    <p className="text-[14px] text-slate-800 leading-normal break-words">
                       {renderMentions(msg.content, members, handleMentionClick)}
                     </p>
-
                   </div>
                 </div>
               );
@@ -393,7 +413,7 @@ export default function ChannelsPage() {
         </div>
 
         {/* Typing indicator */}
-        <div className="px-6 h-6 flex items-center bg-white">
+        <div className="px-4 md:px-6 h-6 flex items-center bg-white">
           {typingUser && (
             <span className="text-[11.5px] font-medium text-[var(--color-t3)] italic animate-pulse">
               <span className="font-bold">{typingUser}</span> está digitando...
@@ -402,10 +422,10 @@ export default function ChannelsPage() {
         </div>
 
         {/* Composer */}
-        <div className="px-6 pb-6 bg-white shrink-0 relative">
+        <div className="px-4 md:px-6 pb-4 md:pb-6 bg-white shrink-0 relative">
           {/* Autocomplete de @menção */}
           {mentionOpen && mentionResults.length > 0 && (
-            <div className="absolute bottom-full left-6 right-6 mb-2 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden z-20">
+            <div className="absolute bottom-full left-4 right-4 md:left-6 md:right-6 mb-2 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden z-20">
               {mentionResults.map((m) => (
                 <button
                   key={m.id}
@@ -447,7 +467,7 @@ export default function ChannelsPage() {
             <div className="bg-slate-50 px-2 py-1.5 border-t border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-1">
                 <button className="p-1.5 rounded text-[var(--color-t3)] hover:text-slate-700 hover:bg-slate-200/50 transition-colors cursor-pointer" title="Anexar arquivo"><Paperclip className="w-4 h-4" /></button>
-                <button className="p-1.5 rounded text-[var(--color-t3)] hover:text-slate-700 hover:bg-slate-200/50 transition-colors cursor-pointer" title="Formatação"><span className="font-bold text-[13px] px-1">Aa</span></button>
+                <button className="p-1.5 rounded text-[var(--color-t3)] hover:text-slate-700 hover:bg-slate-200/50 transition-colors cursor-pointer hidden sm:block" title="Formatação"><span className="font-bold text-[13px] px-1">Aa</span></button>
                 <button
                   onClick={() => {
                     setNewMsg((v) => v + "@");
@@ -469,11 +489,11 @@ export default function ChannelsPage() {
                   newMsg.trim() ? "bg-[var(--color-navy)] text-white shadow-sm hover:bg-[var(--color-navy-2)]" : "bg-slate-200 text-slate-400 cursor-not-allowed"
                 )}
               >
-                {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Send className="w-3.5 h-3.5" /> Enviar</>}
+                {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Send className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Enviar</span></>}
               </button>
             </div>
           </div>
-          <div className="mt-2 px-1">
+          <div className="mt-2 px-1 hidden md:block">
             <div className="text-[10px] text-[var(--color-t3)] font-medium">
               Pressione <kbd className="px-1 py-0.5 rounded border border-slate-200 bg-slate-50 font-mono">Enter</kbd> para enviar ·{" "}
               <kbd className="px-1 py-0.5 rounded border border-slate-200 bg-slate-50 font-mono">@</kbd> para mencionar

@@ -131,7 +131,7 @@ export default function MuralPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
         {/* Minhas Tarefas */}
         <div className="bg-white border border-[var(--color-border)] rounded-[var(--radius-md)] p-5 shadow-[var(--shadow-sm)]">
           <SectionHeader icon={CircleDot} title="Minhas Tarefas" count={data?.tasks?.length} />

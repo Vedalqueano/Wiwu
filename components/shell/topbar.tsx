@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, Menu } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { SearchModal } from "./search-modal";
@@ -9,9 +9,10 @@ import { getSocket } from "@/lib/socket-client";
 
 interface TopBarProps {
   title: string;
+  onMenuClick?: () => void;
 }
 
-export function TopBar({ title }: TopBarProps) {
+export function TopBar({ title, onMenuClick }: TopBarProps) {
   const { data: session } = useSession();
   const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -71,7 +72,15 @@ export function TopBar({ title }: TopBarProps) {
 
   return (
     <>
-      <header className="h-[54px] bg-white border-b border-[var(--color-border)] flex items-center px-[22px] gap-3 shrink-0">
+      <header className="h-[54px] bg-white border-b border-[var(--color-border)] flex items-center px-4 md:px-[22px] gap-3 shrink-0">
+        {/* Hamburger — mobile only */}
+        <button
+          onClick={onMenuClick}
+          className="w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center text-[var(--color-t2)] hover:bg-[var(--color-page)] transition-colors cursor-pointer md:hidden"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
         <h1 className="text-[14px] font-bold text-[var(--color-t1)]">{title}</h1>
 
         <div className="ml-auto flex items-center gap-2">
@@ -81,14 +90,14 @@ export function TopBar({ title }: TopBarProps) {
             className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-page)] border border-[var(--color-border)] rounded-full text-sm text-[var(--color-t3)] cursor-pointer hover:border-[var(--color-border-2)] transition-colors"
           >
             <Search className="w-3.5 h-3.5" />
-            <span className="text-[12px]">Buscar...</span>
-            <kbd className="ml-1 px-1 py-0.5 rounded border border-[var(--color-border)] text-[10px] font-mono bg-white hidden sm:block">
+            <span className="text-[12px] hidden sm:inline">Buscar...</span>
+            <kbd className="ml-1 px-1 py-0.5 rounded border border-[var(--color-border)] text-[10px] font-mono bg-white hidden md:block">
               Ctrl K
             </kbd>
           </button>
 
-          {/* Date */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-page)] border border-[var(--color-border)] rounded-full">
+          {/* Date — hidden on mobile */}
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-page)] border border-[var(--color-border)] rounded-full">
             <span className="text-[12px] text-[var(--color-t2)] font-medium" suppressHydrationWarning>{dateStr}</span>
           </div>
 

@@ -152,7 +152,7 @@ function PolicyModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-lg)] w-full max-w-[760px] max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-lg)] w-full max-w-[760px] max-h-[90vh] md:max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--color-border)]">
           <h2 className="text-[14px] font-bold text-[var(--color-t1)]">
@@ -355,9 +355,12 @@ export default function KnowledgeBasePage() {
   const formatDate = (d: string) => new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 
   return (
-    <div className="flex h-full -m-[22px] animate-fade-in">
+    <div className="flex h-full -m-4 md:-m-[22px] animate-fade-in">
       {/* Sidebar esquerda */}
-      <div className="w-[260px] bg-white border-r border-[var(--color-border)] flex flex-col shrink-0">
+      <div className={cn(
+        "w-full md:w-[260px] bg-white border-r border-[var(--color-border)] flex flex-col shrink-0",
+        selected ? "hidden md:flex" : "flex"
+      )}>
         <div className="p-3.5 border-b border-[var(--color-border)]">
           <div className="flex items-center justify-between mb-2.5">
             <h2 className="text-[13px] font-bold text-[var(--color-t1)]">Knowledge Base</h2>
@@ -462,11 +465,14 @@ export default function KnowledgeBasePage() {
       </div>
 
       {/* Conteúdo principal */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-[var(--color-page)]">
+      <div className={cn(
+        "flex-1 flex flex-col overflow-hidden bg-[var(--color-page)]",
+        selected ? "flex" : "hidden md:flex"
+      )}>
         {selected ? (
           <>
             {/* Header da policy */}
-            <div className="bg-white border-b border-[var(--color-border)] px-6 py-4">
+            <div className="bg-white border-b border-[var(--color-border)] px-4 md:px-6 py-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -513,7 +519,7 @@ export default function KnowledgeBasePage() {
 
             {/* Conteúdo markdown */}
             <div className="flex-1 overflow-y-auto">
-              <div className="max-w-[760px] mx-auto px-6 py-6">
+              <div className="max-w-[760px] mx-auto px-4 md:px-6 py-6">
                 <div className="bg-white rounded-[var(--radius-md)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] p-6 md:p-8">
                   <MarkdownView content={selected.content} />
                 </div>
